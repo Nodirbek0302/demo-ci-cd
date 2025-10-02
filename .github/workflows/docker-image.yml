@@ -1,32 +1,26 @@
-name: Spring Boot CI/CD
+name: Docker Image CI
 
 on:
   push:
-    branches:
-      - master
+    branches: [ "master" ]
+
 
 jobs:
+
   build:
+
     runs-on: ubuntu-latest
 
+
     steps:
-      - name: Checkout repository
-        uses: actions/checkout@v4   # v2 emas, yangisi
+      - uses: actions/checkout@v3
+      - name: Login Dockerhub
+        env:
+          DOCKER_USERNAME: ${{secrets.DOCKER_USERNAME}}
+          DOCKER_PASSWORD: ${{secrets.DOCKER_PASSWORD}}
+        run: docker login -u $DOCKER_USERNAME -p $DOCKER_PASSWORD
 
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v3   # v1 emas, yangisi
-
-      - name: Log in to DockerHub
-        uses: docker/login-action@v3   # v1 emas, yangisi
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
-          password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
-
-      - name: Build Docker image
-        run: docker build -t no0404ir0302/demo-ci-cd:latest .
-
-      - name: Push Docker image to DockerHub
-        run: docker push no0404ir0302/demo-ci-cd:latest
-
-      - name: Trigger Portainer (deploy)
-        run: curl -k -X POST "https://207.154.234.167:9443/api/stacks/webhooks/b1455407-8378-43cd-b363-00a58b926a7d"
+      - name: Build the Docker image
+        run: docker build -t no0404ir0302/docker-api .
+      - name: Push to Dockerhub
+        run: docker push no0404ir0302/docker-api:latest
