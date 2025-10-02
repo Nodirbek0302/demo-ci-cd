@@ -11,13 +11,13 @@ jobs:
 
     steps:
       - name: Checkout repository
-        uses: actions/checkout@v2
+        uses: actions/checkout@v4   # v2 emas, yangisi
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
+        uses: docker/setup-buildx-action@v3   # v1 emas, yangisi
 
       - name: Log in to DockerHub
-        uses: docker/login-action@v1
+        uses: docker/login-action@v3   # v1 emas, yangisi
         with:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
