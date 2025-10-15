@@ -47,6 +47,9 @@ jobs:
             echo "🧹 Stopping and removing old containers..."
             docker-compose -f $COMPOSE_PATH down -v || true
 
+            echo "🧹 Cleaning old Docker images..."
+            docker image prune -af
+
             echo "⬆️ Pulling latest image..."
             docker pull no0404ir0302/demo-ci-cd:latest
 
