@@ -42,7 +42,7 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            COMPOSE_PATH="/home/ubuntu/ci-cd/docker-compose.yml"
+            COMPOSE_PATH="/home/ubuntu/docker-compose.yml"
 
             echo "🧹 Stopping and removing old containers..."
             docker-compose -f $COMPOSE_PATH down -v || true
