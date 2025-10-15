@@ -28,6 +28,4 @@ jobs:
       - name: Push Docker image to DockerHub
         run: docker push no0404ir0302/demo-ci-cd:latest
 
-      - name: Trigger Portainer (deploy)
-        run: curl -k -X POST "https://207.154.234.167:9443/api/stacks/webhooks/b1455407-8378-43cd-b363-00a58b926a7d"
 
