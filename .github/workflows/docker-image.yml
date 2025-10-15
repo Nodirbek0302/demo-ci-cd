@@ -42,15 +42,27 @@ jobs:
           username: ${{ secrets.EC2_USER }}
           key: ${{ secrets.EC2_SSH_KEY }}
           script: |
-            echo "🧹 Cleaning old container and image..."
-            docker ps -aq --filter "name=demo-ci-cd" | xargs -r docker stop
-            docker ps -aq --filter "name=demo-ci-cd" | xargs -r docker rm
-            docker image prune -f
+            echo "🧹 Cleaning old containers..."
+            docker-compose -f /home/ubuntu/ci-cd/docker-compose.yml down -v
 
-            echo "⬇️ Pulling latest image..."
+            echo "⬆️ Pulling latest image..."
             docker pull no0404ir0302/demo-ci-cd:latest
 
-            echo "🚀 Running new container..."
-            docker run -d --restart always -p 8080:8080 --name demo-ci-cd no0404ir0302/demo-ci-cd:latest
+            echo "🚀 Starting containers..."
+            docker-compose -f /home/ubuntu/ci-cd/docker-compose.yml up -d --build
+
+            echo "⏳ Waiting for DB to be healthy..."
+            for i in {1..20}; do
+              STATUS=$(docker inspect --format='{{.State.Health.Status}}' postgres-db)
+              if [ "$STATUS" = "healthy" ]; then
+                echo "✅ DB is healthy!"
+                break
+              fi
+              echo "Waiting for DB... ($i/20)"
+              sleep 5
+            done
+
+            echo "💻 Running tests inside app container..."
+            docker exec spring-app mvn test
 
             echo "✅ Deployment completed successfully!"
