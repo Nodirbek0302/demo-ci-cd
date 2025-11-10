@@ -1,4 +1,4 @@
-name: Spring Boot CI/CD
+name: Python bot CI/CD
 
 on:
   push:
@@ -10,69 +10,38 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Checkout repository
+      - name: 🧩 Checkout repository
         uses: actions/checkout@v2
 
-      - name: Set up JDK 17
-        uses: actions/setup-java@v1
+      - name: 🐳 Set up Docker Buildx
+        uses: docker/setup-buildx-action@v2
+
+      - name: 🔐 Login to DockerHub
+        uses: docker/login-action@v2
         with:
-          java-version: '17'
-
-      - name: Build Spring Boot app
-        run: mvn clean package -DskipTests
-
-      - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@v1
-
-      - name: Log in to DockerHub
-        uses: docker/login-action@v1
-        with:
-          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          username: no0404ir0302
           password: ${{ secrets.DOCKERHUB_ACCESS_TOKEN }}
 
-      - name: Build and Push Docker image
+      - name: 🚀 Build and Push Docker image
         run: |
-          docker build --no-cache -t no0404ir0302/demo-ci-cd:latest .
-          docker push no0404ir0302/demo-ci-cd:latest
+          docker build -t no0404ir0302/python-bot:latest .
+          docker push no0404ir0302/python-bot:latest
 
-      - name: Deploy to EC2
+      - name: 🌍 Deploy to Server via SSH (login/password)
         uses: appleboy/ssh-action@v0.1.10
         with:
-          host: ${{ secrets.EC2_HOST }}
-          username: ${{ secrets.EC2_USER }}
-          key: ${{ secrets.EC2_SSH_KEY }}
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          password: ${{ secrets.SERVER_PASSWORD }}
           script: |
-            COMPOSE_PATH="/home/ubuntu/docker-compose.yml"
+            cd /home/SubAdmin/web/bot.quramiz.uz
+            echo "Pulling latest Docker image..."
+            docker pull no0404ir0302/python-bot:latest
 
-            echo "🧹 Stopping and removing old containers..."
-            docker-compose -f $COMPOSE_PATH down -v || true
+            echo "Stopping old containers..."
+            docker-compose down -v || docker compose down -v || true
 
-            echo "🧹 Cleaning old Docker images..."
-            docker image prune -af
+            echo "Starting new containers..."
+            docker-compose up -d --build || docker compose up -d --build
 
-            echo "⬆️ Pulling latest image..."
-            docker pull no0404ir0302/demo-ci-cd:latest
-
-            echo "🚀 Starting containers..."
-            docker-compose -f $COMPOSE_PATH up -d --build
-
-            echo "⏳ Waiting for DB to be healthy..."
-            for i in $(seq 1 20); do
-              STATUS=$(docker inspect --format='{{.State.Health.Status}}' postgres-db 2>/dev/null || echo "null")
-              if [ "$STATUS" = "healthy" ]; then
-                echo "✅ DB is healthy!"
-                break
-              fi
-              echo "Waiting for DB... ($i/20)"
-              sleep 5
-            done
-
-            echo "💻 Running tests inside app container..."
-            if docker ps | grep -q spring-app; then
-              docker exec spring-app mvn test
-            else
-              echo "⚠️ spring-app container not found, skipping tests"
-            fi
-
-            echo "✅ Deployment completed successfully!"
-      
+            echo "✅ Deployment successful!"
